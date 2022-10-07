@@ -4,7 +4,7 @@ on:
     branches:
       -test
 
-  jobs:
+jobs:
     build-frontend:
       runs-on: ubuntu-latest
       steps:
@@ -22,41 +22,41 @@ on:
             name: frontend-build
             path: frontend/build/
 
-      build-backend:
-        runs-on: ubuntu-latest
-        needs: build-frontend
-        steps:
-          - uses: actions/checkout@v3
-          - uses: action/setup-java@v2
-            with:
-              java-version: '17'
-              distribution: 'temurin'
-          - uses: actions/download-artifact@v2
-            with:
-              name: frontend-build
-              path: backend/src/main/resources/static
-          - name: Build Backend
-            run: mvn -B package --file backend/pom.xml
-          - uses: actions/upload-artifact@v2
-            with:
-              name: backend-build
-              path: backend/target/moviedb-nf.jar
+    build-backend:
+      runs-on: ubuntu-latest
+      needs: build-frontend
+      steps:
+        - uses: actions/checkout@v3
+        - uses: action/setup-java@v2
+          with:
+            java-version: '17'
+            distribution: 'temurin'
+        - uses: actions/download-artifact@v2
+          with:
+            name: frontend-build
+            path: backend/src/main/resources/static
+        - name: Build Backend
+          run: mvn -B package --file backend/pom.xml
+        - uses: actions/upload-artifact@v2
+          with:
+            name: backend-build
+            path: backend/target/moviedb-nf.jar
 
-      deploy:
-        runs-on: ubuntu-latest
-        needs: build-backend
-        env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-        steps:
-          - uses: actions/checkout@v3
-          - uses: actions/download-artifact@v2
-            with:
-              name: backend-build
-              path: backend/target
-          - name: Login to Heroku
-            run: heroku container:login
-          - name: Push App
-            run: heroku container:push web -a moviedb-nf
-          - name: Release App
-            run: heroku container:release web -a moviedb-nf
+    deploy:
+      runs-on: ubuntu-latest
+      needs: build-backend
+      env:
+        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+      steps:
+        - uses: actions/checkout@v3
+        - uses: actions/download-artifact@v2
+          with:
+            name: backend-build
+            path: backend/target
+        - name: Login to Heroku
+          run: heroku container:login
+        - name: Push App
+          run: heroku container:push web -a moviedb-nf
+        - name: Release App
+          run: heroku container:release web -a moviedb-nf
 
